@@ -41,5 +41,41 @@ services:
       PMA_USER: ${MARIADB_USER}
       PMA_PASSWORD: ${MARIADB_PASSWORD}
 
+  wiki-db:
+    image: postgres:15
+    container_name: wp_wiki_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wiki
+      POSTGRES_USER: wikiuser
+      POSTGRES_PASSWORD: wikisecret
+    volumes:
+      - wiki-db-data:/var/lib/postgresql/data
+
+  wiki:
+    image: ghcr.io/requarks/wiki:2
+    container_name: wp_wiki
+    restart: unless-stopped
+    depends_on:
+      - wiki-db
+    ports:
+      - "3001:3000"
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: wiki-db
+      DB_PORT: 5432
+      DB_NAME: wiki
+      DB_USER: wikiuser
+      DB_PASS: wikisecret
+      SECRET_KEY: supersecretkey
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: wp_grafana
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+
 volumes:
   db_data:
+  wiki-db-data:
